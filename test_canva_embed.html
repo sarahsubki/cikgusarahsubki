@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ujian Canva Embed</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #6c5ce7, #00cec9);
+    }
+    .card {
+      width: min(90%, 700px);
+      padding: 40px;
+      border-radius: 28px;
+      background: white;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,.2);
+    }
+    h1 { margin-top: 0; color: #2d3436; }
+    p { font-size: 20px; color: #636e72; }
+    button {
+      border: 0;
+      padding: 15px 28px;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #0984e3;
+      color: white;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+      min-height: 28px;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>🎮 UJIAN CANVA EMBED</h1>
+    <p>Jika halaman ini muncul dalam Canva, GitHub Pages boleh dibaca oleh Canva Embed.</p>
+    <button onclick="uji()">KLIK UNTUK UJI JAVASCRIPT</button>
+    <div id="status"></div>
+  </main>
+
+  <script>
+    function uji() {
+      document.getElementById("status").textContent =
+        "✅ JAVASCRIPT BERFUNGSI — Canva berjaya menjalankan kandungan interaktif.";
+    }
+  </script>
+</body>
+</html>
