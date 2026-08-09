@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Larian Tatabahasa Cikgu Sarah</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --sky: #87ceeb;
+      --grass: #8bc34a;
+      --road: #55585d;
+      --green: #10b981;
+      --orange: #f59e0b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      overflow: hidden;
+      user-select: none;
+      transition: background-color 1s ease;
+    }
+
+    .game-shell {
+      width: 100%;
+      min-height: calc(100 * min(var(--vh, 1vh), 1vh));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-background {
+      position: absolute;
+      inset: 0 0 80px 0;
+      background: linear-gradient(to bottom, var(--sky) 40%, var(--grass) 40%);
+      z-index: 0;
+      transition: background 1s ease;
+    }
+
+    .clouds {
+      position: absolute;
+      top: 10%;
+      width: 200%;
+      height: 100px;
+      opacity: .72;
+      background:
+        radial-gradient(ellipse at 15% 50%, rgba(255,255,255,.9) 0 15%, transparent 16%),
+        radial-gradient(ellipse at 22% 43%, rgba(255,255,255,.9) 0 12%, transparent 13%),
+        radial-gradient(ellipse at 55% 45%, rgba(255,255,255,.85) 0 16%, transparent 17%),
+        radial-gradient(ellipse at 63% 55%, rgba(255,255,255,.85) 0 13%, transparent 14%);
+      animation: moveClouds 20s linear infinite;
+    }
+
+    .road {
+      position: absolute;
+      z-index: 5;
+      bottom: 80px;
+      left: 50%;
+      width: 100%;
+      max-width: 600px;
+      height: 60%;
+      transform: translateX(-50%);
+      overflow: hidden;
+      border-right: 10px solid #fff;
+      border-left: 10px solid #fff;
+      background: var(--road);
+      box-shadow: inset 0 -20px 50px rgba(0,0,0,.22);
+      transition: background 1s ease;
+    }
+
+    .road-lanes {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    .lane-divider {
+      flex: 1;
+      border-right: 5px dashed #fff;
+      animation: moveLines .5s linear infinite;
+    }
+
+    .lane-divider:last-child { border-right: 0; }
+
+    .lane-button {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      z-index: 12;
+      width: 33.333%;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .lane-button:hover,
+    .lane-button:focus-visible { background: rgba(255,255,255,.12); }
+
+    .lane-button:focus-visible,
+    .primary-button:focus-visible,
+    .secondary-button:focus-visible,
+    .certificate-button:focus-visible,
+    .name-input:focus-visible {
+      outline: 4px solid #1d4ed8;
+      outline-offset: 3px;
+    }
+
+    .lane-one { left: 0; }
+    .lane-two { left: 33.333%; }
+    .lane-three { left: 66.666%; }
+
+    .player {
+      position: absolute;
+      z-index: 8;
+      bottom: 20px;
+      left: 41.5%;
+      display: flex;
+      width: 60px;
+      height: 80px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 30px 30px 10px 10px;
+      background: #3b82f6;
+      box-shadow: 0 10px 15px rgba(0,0,0,.3);
+      font-size: 30px;
+      transition: left .2s cubic-bezier(.175,.885,.32,1.275);
+    }
+
+    .item-container {
+      position: absolute;
+      z-index: 9;
+      top: -120px;
+      display: flex;
+      width: 100%;
+      transition: top .5s ease-in;
+    }
+
+    .answer-box {
+      display: flex;
+      flex: 1;
+      justify-content: center;
+      padding: 0 5px;
+    }
+
+    .answer-card {
+      width: 90%;
+      min-width: 72px;
+      padding: 15px 7px;
+      border: 4px solid var(--orange);
+      border-radius: 15px;
+      background: #fff;
+      box-shadow: 0 8px 15px rgba(0,0,0,.2);
+      color: #111827;
+      font-size: clamp(15px, 2vw, 20px);
+      font-weight: 700;
+      text-align: center;
+      transform: scale(.9);
+      transition: transform .2s, background .2s;
+    }
+
+    .question-board {
+      position: absolute;
+      z-index: 20;
+      top: 20px;
+      left: 50%;
+      width: min(90%, 600px);
+      padding: 18px 32px;
+      transform: translateX(-50%);
+      border-top: 8px solid var(--green);
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: 0 10px 25px rgba(0,0,0,.2);
+      text-align: center;
+    }
+
+    .hud-panel {
+      position: absolute;
+      z-index: 30;
+      top: 16px;
+      left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 12px;
+      border: 2px solid #22c55e;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 7px 18px rgba(0,0,0,.16);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .hud-level-badge {
+      display: inline-block;
+      background: #3b82f6;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .level-up-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    
+    .level-up-text {
+      background: rgba(0,0,0,0.8);
+      color: #fde047;
+      padding: 20px 40px;
+      border-radius: 20px;
+      font-size: 32px;
+      font-weight: 900;
+      transform: scale(0.5);
+      transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .level-up-overlay.active {
+      opacity: 1;
+    }
+    .level-up-overlay.active .level-up-text {
+      transform: scale(1);
+    }
+
+    .custom-footer {
+      position: absolute;
+      z-index: 30;
+      bottom: 0;
+      display: flex;
+      width: 100%;
+      height: 80px;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      box-shadow: 0 -4px 10px rgba(0,0,0,.1);
+    }
+
+    .modal {
+      position: fixed;
+      z-index: 50;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(0,0,0,.8);
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-card {
+      width: min(100%, 540px);
+      max-height: calc(100 * min(var(--vh, 1vh), 1vh) - 36px);
+      overflow-y: auto;
+      padding: 30px;
+      border-radius: 24px;
+      background: #fff;
+      text-align: center;
+    }
+
+    .primary-button,
+    .secondary-button,
+    .certificate-button {
+      border: 0;
+      cursor: pointer;
+      transition: transform .2s, filter .2s;
+    }
+
+    .primary-button:hover,
+    .secondary-button:hover,
+    .certificate-button:hover {
+      filter: brightness(.96);
+      transform: translateY(-2px);
+    }
+
+    .name-input {
+      width: 100%;
+      padding: 13px 15px;
+      border: 2px solid #86efac;
+      border-radius: 14px;
+      color: #1f2937;
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .paused .lane-divider,
+    .paused .clouds { animation-play-state: paused; }
+
+    @keyframes moveLines {
+      from { transform: translateY(-50px); }
+      to { transform: translateY(0); }
+    }
+
+    @keyframes moveClouds {
+      from { transform: translateX(0); }
+      to { transform: translateX(-38%); }
+    }
+
+    @media (max-width: 640px) {
+      .hud-panel {
+        top: 10px;
+        left: 10px;
+        padding: 8px;
+        font-size: 14px;
+      }
+
+      .question-board {
+        top: 108px;
+        width: calc(100% - 24px);
+        padding: 13px 18px;
+      }
+
+      .road { height: 56%; }
+      .modal-card { padding: 24px 18px; }
+    }
+  </style>
+ </head>
+ <body data-template-id="__page-root" style="background: var(--sky);">
+  <div class="game-shell">
+   <div class="game-background" id="bg-animation" aria-hidden="true">
+    <div class="clouds"></div>
+   </div>
+   <header class="hud-panel" aria-label="Status permainan">
+    <div id="hud-level" class="hud-level-badge">Tahap 1: Kampung</div>
+    <div class="text-orange-500">
+     <span aria-hidden="true">🍎</span> <span style="color: rgb(249, 115, 22); font-weight: 700;">Markah:</span> <span id="score">0</span>/<span id="hud-score-total">14</span>
+    </div>
+    <div class="text-gray-600">
+     <span aria-hidden="true">⏩</span> <span style="color: rgb(75, 85, 99); font-weight: 700;">Soalan:</span> <span id="q-counter">1</span>/<span id="hud-question-total">14</span>
+    </div>
+   </header>
+   
+   <div id="level-up-screen" class="level-up-overlay">
+     <div id="level-up-message" class="level-up-text">Tahap Baru Dibuka!</div>
+   </div>
+
+   <main>
+    <section class="question-board hidden" id="q-board" aria-live="polite" aria-label="Soalan permainan">
+     <h2 id="q-type" class="mb-2 font-black uppercase tracking-wide text-green-600"></h2>
+     <p id="q-text" class="m-0 text-xl font-bold text-gray-800 sm:text-2xl"></p>
+    </section>
+    <section class="road" aria-label="Pilih lorong jawapan">
+     <div class="road-lanes" aria-hidden="true">
+      <div class="lane-divider"></div>
+      <div class="lane-divider"></div>
+      <div class="lane-divider"></div>
+     </div>
+     <button class="lane-button lane-one" type="button" aria-label="Pilih lorong pertama" onclick="movePlayer(0)"></button> 
+     <button class="lane-button lane-two" type="button" aria-label="Pilih lorong kedua" onclick="movePlayer(1)"></button> 
+     <button class="lane-button lane-three" type="button" aria-label="Pilih lorong ketiga" onclick="movePlayer(2)"></button>
+     
+     <div class="item-container" id="items" aria-hidden="true">
+      <div class="answer-box"><div class="answer-card" id="ans-0"></div></div>
+      <div class="answer-box"><div class="answer-card" id="ans-1"></div></div>
+      <div class="answer-box"><div class="answer-card" id="ans-2"></div></div>
+     </div>
+     <div class="player" id="player" aria-label="Pelari">🏃</div>
+    </section>
+   </main>
+   <div class="modal" id="start-screen">
+    <section class="modal-card border-8 border-blue-400" aria-labelledby="start-heading">
+     <h1 id="start-heading" class="mb-4 font-black" style="color: rgb(37, 99, 235); font-size: 36px;">Larian Tatabahasa</h1>
+     <p class="mb-6 font-bold" style="color: rgb(55, 65, 81); font-size: 18px; line-height: 1.5;">
+      Jawab soalan dengan tepat untuk mengubah lokasi larian. <br><br>
+      🏕️ Tahap 1: Kampung<br>
+      🏖️ Tahap 2: Pantai (Markah 5)<br>
+      🏙️ Tahap 3: Bandaraya (Markah 10)<br><br>
+      Capai sekurang-kurangnya 80% untuk sijil!
+     </p>
+     <button class="primary-button rounded-full px-9 py-4 shadow-lg" type="button" onclick="startGame()" style="background: rgb(34, 197, 94); color: rgb(255, 255, 255); font-weight: 900; font-size: 24px;">MULA LARI! ▶</button>
+    </section>
+   </div>
+   <div class="modal hidden" id="game-over">
+    <section class="modal-card border-8 border-green-500" aria-labelledby="end-heading">
+     <h1 id="end-heading" class="mb-2 font-black">
+      <span id="end-success-title" class="hidden" style="color: rgb(22, 163, 74); font-size: 34px;">TAHNIAH, CIKGU BANGGA!</span> 
+      <span id="end-retry-title" class="hidden" style="color: rgb(234, 88, 12); font-size: 34px;">CUBA LAGI!</span>
+     </h1>
+     <p class="mb-5 text-xl font-bold text-gray-800 sm:text-2xl"><span style="color: rgb(31, 41, 55);">Markah Anda:</span> <span id="final-score" class="text-orange-500"></span>/<span id="final-total">14</span></p>
+     <div id="certificate-area" class="hidden mb-5">
+      <p class="mb-3 font-bold" style="color: rgb(22, 163, 74); font-size: 16px;">Syabas! Anda melepasi tahap 80%. Masukkan nama anda untuk menjana sijil.</p>
+      <form id="certificate-form" class="space-y-3" novalidate="">
+       <label class="block text-left font-bold" for="student-name" style="color: rgb(22, 101, 52); font-size: 16px;">Nama murid</label> 
+       <input id="student-name" class="name-input" type="text" maxlength="60" autocomplete="name" required="" placeholder="Tulis nama penuh anda di sini">
+       <p id="name-error" class="hidden text-left text-sm font-bold" style="color: rgb(220, 38, 38);">Sila masukkan nama anda sebelum menjana sijil.</p>
+       <button class="certificate-button w-full rounded-full px-6 py-4 shadow-lg" type="submit" style="background: rgb(250, 204, 21); color: rgb(113, 63, 18); font-weight: 900; font-size: 20px;">JANA SIJIL PENCAPAIAN</button>
+      </form>
+     </div>
+     <button class="secondary-button rounded-full px-8 py-3" type="button" onclick="resetGame()" style="background: rgb(229, 231, 235); color: rgb(31, 41, 55); font-weight: 700; font-size: 18px;">Main Semula</button>
+    </section>
+   </div>
+   <footer class="custom-footer">
+    <div class="flex items-center gap-4">
+     <img data-template-id="footer-avatar" class="h-14 w-14 rounded-full border-2 border-green-500 object-cover" loading="lazy" src="https://i.imgur.com/KV3qXIs.png" alt="Cikgu Sarah">
+     <div>
+      <p class="m-0 text-xs font-bold uppercase" style="color: rgb(107, 114, 128);">Disediakan Oleh</p>
+      <p class="m-0 text-lg font-black" style="color: rgb(21, 128, 61);">Cikgu Sarah binti Subki</p>
+      <p class="m-0 text-sm font-bold" style="color: rgb(75, 85, 99);">SK Bagan Tuan Kechil</p>
+     </div>
+    </div>
+   </footer>
+  </div>
+  <script>
+    const questions = [
+      { type: "Ayat Seruan", text: "___, beraninya kamu masuk ke kawasan ini!", options: ["Wah", "Eh", "Cis"], answer: "Cis" },
+      { type: "Ayat Perintah", text: "___ buang sampah di dalam tong yang disediakan.", options: ["Sila", "Jangan", "Usah"], answer: "Sila" },
+      { type: "Ayat Seruan", text: "___, indahnya pemandangan di tepi pantai ini!", options: ["Aduh", "Wah", "Oh"], answer: "Wah" },
+      { type: "Ayat Perintah", text: "___ bising di dalam perpustakaan.", options: ["Tolong", "Sila", "Jangan"], answer: "Jangan" },
+      { type: "Ayat Seruan", text: "___, sakitnya kakiku tersadung akar pokok!", options: ["Aduh", "Amboi", "Eh"], answer: "Aduh" },
+      { type: "Ayat Perintah", text: "___ bertenang, pasukan bantuan sedang tiba.", options: ["Harap", "Usah", "Sila"], answer: "Harap" },
+      { type: "Ayat Seruan", text: "___, kamu rupanya yang mengambil buku saya!", options: ["Eh", "Cis", "Wah"], answer: "Eh" },
+      { type: "Ayat Perintah", text: "___ susun meja dan kerusi ini dengan kemas.", options: ["Tolong", "Jangan", "Usah"], answer: "Tolong" },
+      { type: "Ayat Seruan", text: "___, comelnya anak kucing yang baru lahir ini!", options: ["Amboi", "Cis", "Aduh"], answer: "Amboi" },
+      { type: "Ayat Perintah", text: "___ bermain di tepi sungai yang dalam itu.", options: ["Sila", "Tolong", "Usah"], answer: "Usah" },
+      { type: "Ayat Seruan", text: "___, kamu telah berjaya menjadi johan pertandingan itu!", options: ["Syabas", "Aduh", "Cis"], answer: "Syabas" },
+      { type: "Ayat Perintah", text: "___ tutup pintu bilik darjah sebelum pulang.", options: ["Tolong", "Jangan", "Usah"], answer: "Tolong" },
+      { type: "Ayat Seruan", text: "___, mahalnya harga beg sekolah itu!", options: ["Aduhai", "Wah", "Amboi"], answer: "Aduhai" },
+      { type: "Ayat Perintah", text: "___ pastikan semua lampu telah dipadamkan.", options: ["Sila", "Cis", "Wah"], answer: "Sila" }
+    ];
+
+    const environments = [
+      { name: "Tahap 1: Kampung", req: 0, sky: "#87ceeb", grass: "#8bc34a", road: "#55585d", speed: 0.6 },
+      { name: "Tahap 2: Pantai", req: 5, sky: "#fde047", grass: "#fcd34d", road: "#d97706", speed: 0.5 },
+      { name: "Tahap 3: Bandaraya", req: 10, sky: "#1e1b4b", grass: "#312e81", road: "#1f2937", speed: 0.4 }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let currentLvlIdx = 0;
+    let isMoving = false;
+    let audioContext = null;
+
+    const player = document.getElementById("player");
+    const items = document.getElementById("items");
+    const bgAnimation = document.getElementById("bg-animation");
+    const questionBoard = document.getElementById("q-board");
+    const gameOver = document.getElementById("game-over");
+    const certificateArea = document.getElementById("certificate-area");
+
+    function playTone(frequency, duration, type, secondTone) {
+      try {
+        audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioContext.currentTime;
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, now);
+        if (secondTone) oscillator.frequency.linearRampToValueAtTime(secondTone, now + duration);
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start(now);
+        oscillator.stop(now + duration);
+      } catch (error) {}
+    }
+
+    function playCorrectSound() {
+      playTone(520, 0.22, "sine", 780);
+      setTimeout(() => playTone(880, 0.16, "sine", 1040), 130);
+    }
+
+    function playWrongSound() {
+      playTone(180, 0.35, "sawtooth", 95);
+    }
+    
+    function playLevelUpSound() {
+      playTone(440, 0.1, "sine", 660);
+      setTimeout(() => playTone(554, 0.1, "sine", 880), 100);
+      setTimeout(() => playTone(659, 0.2, "sine", 1100), 200);
+    }
+
+    function checkLevelProgress() {
+      let newLvlIdx = 0;
+      if (score >= environments[2].req) newLvlIdx = 2;
+      else if (score >= environments[1].req) newLvlIdx = 1;
+
+      if (newLvlIdx !== currentLvlIdx) {
+        currentLvlIdx = newLvlIdx;
+        const env = environments[currentLvlIdx];
+        
+        document.documentElement.style.setProperty('--sky', env.sky);
+        document.documentElement.style.setProperty('--grass', env.grass);
+        document.documentElement.style.setProperty('--road', env.road);
+        
+        const lvlBadge = document.getElementById("hud-level");
+        lvlBadge.textContent = env.name;
+        if(newLvlIdx === 1) lvlBadge.style.background = "#d97706";
+        if(newLvlIdx === 2) lvlBadge.style.background = "#4f46e5";
+
+        const overlay = document.getElementById("level-up-screen");
+        const msg = document.getElementById("level-up-message");
+        msg.textContent = env.name + " Terbuka!";
+        overlay.classList.add("active");
+        playLevelUpSound();
+        
+        setTimeout(() => {
+          overlay.classList.remove("active");
+        }, 2000);
+      }
+    }
+
+    function startGame() {
+      document.getElementById("start-screen").classList.add("hidden");
+      questionBoard.classList.remove("hidden");
+      loadQuestion();
+    }
+
+    function shuffleOptions(options) {
+      const shuffled = [...options];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    function loadQuestion() {
+      if (currentQ >= questions.length) {
+        endGame();
+        return;
+      }
+
+      isMoving = false;
+      document.getElementById("q-counter").textContent = currentQ + 1;
+
+      const question = questions[currentQ];
+      document.getElementById("q-type").textContent = question.type;
+      document.getElementById("q-text").textContent = question.text;
+
+      const shuffled = shuffleOptions(question.options);
+      shuffled.forEach((option, index) => {
+        const card = document.getElementById("ans-" + index);
+        card.textContent = option;
+        card.style.borderColor = "#f59e0b";
+        card.style.backgroundColor = "#ffffff";
+        card.style.color = "#111827";
+      });
+
+      items.style.transition = "none";
+      items.style.top = "-120px";
+
+      setTimeout(() => {
+        items.style.transition = `top ${environments[currentLvlIdx].speed}s ease-in`;
+        items.style.top = "10%";
+      }, 90);
+    }
+
+    function movePlayer(laneIndex) {
+      if (isMoving || currentQ >= questions.length) return;
+
+      isMoving = true;
+      const positions = ["8%", "41.5%", "75%"];
+      player.style.left = positions[laneIndex];
+      items.style.top = "60%";
+
+      setTimeout(() => checkAnswer(laneIndex), environments[currentLvlIdx].speed * 1000);
+    }
+
+    function checkAnswer(laneIndex) {
+      bgAnimation.classList.add("paused");
+
+      const selectedCard = document.getElementById("ans-" + laneIndex);
+      const selectedAnswer = selectedCard.textContent;
+      const correctAnswer = questions[currentQ].answer;
+
+      if (selectedAnswer === correctAnswer) {
+        selectedCard.style.backgroundColor = "#10b981";
+        selectedCard.style.borderColor = "#059669";
+        selectedCard.style.color = "#ffffff";
+        player.textContent = "🍏";
+        score++;
+        document.getElementById("score").textContent = score;
+        playCorrectSound();
+        checkLevelProgress();
+      } else {
+        selectedCard.style.backgroundColor = "#ef4444";
+        selectedCard.style.borderColor = "#dc2626";
+        selectedCard.style.color = "#ffffff";
+        player.textContent = "💥";
+        playWrongSound();
+      }
+
+      setTimeout(() => {
+        player.textContent = "🏃";
+        bgAnimation.classList.remove("paused");
+        currentQ++;
+        loadQuestion();
+      }, 1000);
+    }
+
+    function endGame() {
+      questionBoard.classList.add("hidden");
+      gameOver.classList.remove("hidden");
+      document.getElementById("final-score").textContent = score;
+      document.getElementById("final-total").textContent = questions.length;
+
+      const passed = (score / questions.length) >= 0.8;
+      document.getElementById("end-success-title").classList.toggle("hidden", !passed);
+      document.getElementById("end-retry-title").classList.toggle("hidden", passed);
+      certificateArea.classList.toggle("hidden", !passed);
+
+      if (!passed) {
+        document.getElementById("student-name").value = "";
+        document.getElementById("name-error").classList.add("hidden");
+      }
+    }
+
+    function resetGame() {
+      currentQ = 0;
+      score = 0;
+      currentLvlIdx = 0;
+      isMoving = false;
+
+      document.getElementById("score").textContent = "0";
+      document.getElementById("q-counter").textContent = "1";
+      document.getElementById("student-name").value = "";
+      document.getElementById("name-error").classList.add("hidden");
+      player.textContent = "🏃";
+      player.style.left = "41.5%";
+      
+      const env = environments[0];
+      document.documentElement.style.setProperty('--sky', env.sky);
+      document.documentElement.style.setProperty('--grass', env.grass);
+      document.documentElement.style.setProperty('--road', env.road);
+      document.getElementById("hud-level").textContent = env.name;
+      document.getElementById("hud-level").style.background = "#3b82f6";
+
+      gameOver.classList.add("hidden");
+      document.getElementById("start-screen").classList.remove("hidden");
+      items.style.top = "-120px";
+    }
+
+    document.getElementById("certificate-form").addEventListener("submit", function(event) {
+      event.preventDefault();
+      const nameInput = document.getElementById("student-name");
+      const nameError = document.getElementById("name-error");
+      const studentName = nameInput.value.trim();
+
+      if (!studentName) {
+        nameError.classList.remove("hidden");
+        nameInput.focus();
+        return;
+      }
+      nameError.classList.add("hidden");
+      generateCertificate(studentName);
+    });
+
+    function escapeHtml(value) {
+      const element = document.createElement("div");
+      element.textContent = value;
+      return element.innerHTML;
+    }
+
+    function generateCertificate(studentName) {
+      const percentage = Math.round((score / questions.length) * 100);
+      const dateString = new Date().toLocaleDateString("ms-MY", {
+        day: "numeric", month: "long", year: "numeric"
+      });
+
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) return;
+
+      const teacherImageUrl = document.querySelector('[data-template-id="footer-avatar"]').src;
+
+      printWindow.document.write(`
+        <!doctype html>
+        <html lang="ms">
+        <head>
+          <meta charset="UTF-8">
+          <title>Sijil Pencapaian Tatabahasa</title>
+          <style>
+            * { box-sizing: border-box; }
+            body {
+              margin: 0;
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: #ecfdf5;
+              color: #1f2937;
+              font-family: Georgia, serif;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .certificate {
+              width: 1000px;
+              min-height: 680px;
+              position: relative;
+              overflow: hidden;
+              padding: 66px 90px;
+              border: 16px solid #10b981;
+              outline: 7px solid #facc15;
+              outline-offset: -29px;
+              background: #fff;
+              text-align: center;
+            }
+            .leaf { position: absolute; font-size: 55px; opacity: .25; }
+            .leaf.one { top: 30px; left: 42px; }
+            .leaf.two { right: 42px; bottom: 30px; transform: rotate(180deg); }
+            h1 { margin: 0; color: #047857; font-family: Arial, sans-serif; font-size: 48px; letter-spacing: 3px; }
+            h2 { margin: 13px 0 32px; color: #b45309; font-family: Arial, sans-serif; font-size: 19px; letter-spacing: 2px; }
+            .intro { margin: 0 0 13px; font-size: 21px; }
+            .student {
+              margin: 15px auto 24px;
+              padding: 0 15px 10px;
+              width: 75%;
+              border-bottom: 2px solid #059669;
+              color: #047857;
+              font-size: 38px;
+              font-weight: bold;
+            }
+            .detail { font-size: 19px; line-height: 1.6; }
+            .score {
+              display: inline-block;
+              margin-top: 17px;
+              padding: 12px 35px;
+              border-radius: 10px;
+              background: #d1fae5;
+              color: #047857;
+              font-family: Arial, sans-serif;
+              font-size: 26px;
+              font-weight: bold;
+            }
+            .footer {
+              position: absolute;
+              right: 90px;
+              bottom: 48px;
+              left: 90px;
+              display: flex;
+              align-items: end;
+              justify-content: space-between;
+              font-family: Arial, sans-serif;
+            }
+            .date { text-align: left; font-size: 16px; line-height: 1.5; }
+            .signature { text-align: center; font-size: 15px; }
+            .signature img {
+              display: block; width: 72px; height: 72px;
+              margin: 0 auto 5px; border: 3px solid #10b981;
+              border-radius: 50%; object-fit: cover;
+            }
+            .line { width: 210px; margin: 7px auto; border-top: 2px solid #1f2937; }
+            @media print {
+              @page { size: landscape; margin: 0; }
+              body { background: #fff; }
+            }
+          </style>
+        </head>
+        <body>
+          <article class="certificate">
+            <div class="leaf one">🍃</div>
+            <div class="leaf two">🍃</div>
+            <h1>SIJIL KECEMERLANGAN</h1>
+            <h2>LARIAN TATABAHASA TAHUN 5</h2>
+            <p class="intro">Dengan ini dianugerahkan kepada</p>
+            <div class="student">${escapeHtml(studentName)}</div>
+            <p class="detail">kerana berjaya menguasai topik<br><strong>Ayat Seruan dan Ayat Perintah</strong></p>
+            <div class="score">Markah: ${percentage}%</div>
+            <div class="footer">
+              <div class="date"><strong>Tarikh Permainan</strong><br>${escapeHtml(dateString)}</div>
+              <div class="signature">
+                <img src="${teacherImageUrl}" alt="Guru">
+                <div class="line"></div>
+                <strong>Cikgu Sarah binti Subki</strong><br>
+                SK Bagan Tuan Kechil
+              </div>
+            </div>
+          </article>
+          <script>
+            window.onload = function() { 
+              setTimeout(function() { 
+                window.print(); 
+              }, 600); 
+            };
+          <\/script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+
+    document.addEventListener("keydown", function(event) {
+      if (document.getElementById("start-screen").classList.contains("hidden") &&
+          gameOver.classList.contains("hidden") && !isMoving) {
+        if (event.key === "ArrowLeft") movePlayer(0);
+        if (event.key === "ArrowDown") movePlayer(1);
+        if (event.key === "ArrowRight") movePlayer(2);
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("hud-score-total").textContent = questions.length;
+      document.getElementById("hud-question-total").textContent = questions.length;
+    });
+  </script>
+</body>
+</html>
